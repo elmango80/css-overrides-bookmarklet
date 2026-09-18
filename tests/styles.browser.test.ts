@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { OVERRIDE_STYLE_ID, applyCss } from '../src/styles';
+import { OVERRIDE_STYLE_ID, applyCss, verifyStyleApplication } from '../src/styles';
 
 afterEach(() => {
   document.getElementById(OVERRIDE_STYLE_ID)?.remove();
@@ -24,5 +24,13 @@ describe('CSS injection', () => {
 
     expect(document.querySelectorAll(`#${OVERRIDE_STYLE_ID}`)).toHaveLength(1);
     expect(document.getElementById(OVERRIDE_STYLE_ID)?.textContent).toBe('.target { color: blue; }');
+  });
+
+  it('verifies that an injected style affected the document', () => {
+    const host = document.createElement('div');
+    host.id = 'css-overrides-bookmarklet-probe-target';
+    document.body.append(host);
+
+    expect(verifyStyleApplication(document, host)).toBe(true);
   });
 });

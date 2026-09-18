@@ -1,8 +1,9 @@
 import { createStorageKey, loadCss, saveCss } from './storage';
-import { applyCss } from './styles';
+import { applyCss, probeStyleApplication } from './styles';
 
 export const ROOT_ID = 'css-overrides-bookmarklet-root';
 const OPEN_EDITOR_EVENT = 'css-overrides-bookmarklet:open-editor';
+const BLOCKED_STYLE_STATUS = 'No se pudieron aplicar las reglas CSS.';
 
 export interface BookmarkletRuntime {
   document: Document;
@@ -93,6 +94,10 @@ export function runBookmarklet(runtime?: Partial<BookmarkletRuntime>): void {
         statusNode.textContent = saved.error ?? 'No se pudieron guardar las reglas.';
         return;
       }
+      if (probeStyleApplication(pageDocument, host) === 'blocked') {
+        statusNode.textContent = BLOCKED_STYLE_STATUS;
+        return;
+      }
       renderIndicator();
     });
     close.addEventListener('click', () => {
@@ -108,7 +113,11 @@ export function runBookmarklet(runtime?: Partial<BookmarkletRuntime>): void {
 
   if (currentCss.trim()) {
     applyCss(pageDocument, currentCss);
-    renderIndicator();
+    if (probeStyleApplication(pageDocument, host) === 'blocked') {
+      renderEditor(BLOCKED_STYLE_STATUS);
+    } else {
+      renderIndicator();
+    }
   } else {
     renderEditor(loaded.error ?? '');
   }
