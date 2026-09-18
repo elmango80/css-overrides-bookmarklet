@@ -1,0 +1,26 @@
+{
+  "name": "css-overrides-bookmarklet",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.3.4",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsx scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm build && vitest run --project unit",
+    "test:browser": "pnpm build && vitest run --project browser",
+    "test:all": "pnpm typecheck && pnpm test && pnpm test:browser",
+    "check": "pnpm test:all && pnpm build"
+  },
+  "devDependencies": {
+    "@vitest/browser-playwright": "5.0.0",
+    "esbuild": "0.28.0",
+    "playwright": "1.62.0",
+    "tsx": "4.20.5",
+    "typescript": "6.0.2",
+    "vitest": "5.0.0"
+  }
+}
