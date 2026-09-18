@@ -120,4 +120,68 @@ describe('CSS overrides bookmarklet', () => {
     expect(shadow().querySelector('[data-indicator]')).not.toBeNull();
     expect(getComputedStyle(document.body).getPropertyValue('--close-rule').trim()).toBe('active');
   });
+
+  it('persists CSS across same-origin iframe reloads without applying it automatically', async () => {
+    const createFrame = async (): Promise<HTMLIFrameElement> => {
+      const frame = document.createElement('iframe');
+      frame.srcdoc = '<!doctype html><html><body><div class="target"></div></body></html>';
+      document.body.append(frame);
+      await new Promise<void>((resolve) => frame.addEventListener('load', () => resolve(), { once: true }));
+      return frame;
+    };
+
+    const firstFrame = await createFrame();
+    const firstDocument = firstFrame.contentDocument as Document;
+    const firstWindow = firstFrame.contentWindow as Window;
+    runBookmarklet({
+      document: firstDocument,
+      location: firstWindow.location,
+      storage: firstWindow.localStorage,
+    });
+
+    const css = '.target { --reload-rule: persisted; }';
+    const firstRoot = firstDocument.getElementById(ROOT_ID) as HTMLDivElement;
+    const firstTextarea = firstRoot.shadowRoot?.querySelector('textarea') as HTMLTextAreaElement;
+    firstTextarea.value = css;
+    (firstRoot?.shadowRoot?.querySelector('[data-save]') as HTMLButtonElement).click();
+
+    expect(firstDocument.getElementById(OVERRIDE_STYLE_ID)).not.toBeNull();
+    expect(firstWindow.localStorage.getItem(createStorageKey(firstWindow.location))).toBe(css);
+
+    firstFrame.srcdoc = '<!doctype html><html><body><div class="target"></div></body></html>';
+    await new Promise<void>((resolve) => firstFrame.addEventListener('load', () => resolve(), { once: true }));
+    const secondDocument = firstFrame.contentDocument as Document;
+    const secondWindow = firstFrame.contentWindow as Window;
+
+    expect(secondDocument).not.toBe(firstDocument);
+    expect(secondDocument.getElementById(ROOT_ID)).toBeNull();
+    expect(secondDocument.getElementById(OVERRIDE_STYLE_ID)).toBeNull();
+    expect(secondWindow.localStorage.getItem(createStorageKey(secondWindow.location))).toBe(css);
+    expect(getComputedStyle(secondDocument.querySelector('.target') as Element).getPropertyValue('--reload-rule')).toBe('');
+
+    runBookmarklet({
+      document: secondDocument,
+      location: secondWindow.location,
+      storage: secondWindow.localStorage,
+    });
+
+    expect(secondDocument.getElementById(OVERRIDE_STYLE_ID)).not.toBeNull();
+    expect(getComputedStyle(secondDocument.querySelector('.target') as Element).getPropertyValue('--reload-rule').trim()).toBe('persisted');
+  });
+
+  it('isolates stored rules by pathname while ignoring query and hash', () => {
+    const accountOne = { origin: 'https://example.test', pathname: '/account', search: '?tab=one', hash: '#summary' };
+    const accountTwo = { origin: 'https://example.test', pathname: '/account', search: '?tab=two', hash: '' };
+    const settings = { origin: 'https://example.test', pathname: '/settings', search: '', hash: '' };
+
+    runBookmarklet({ document, location: accountOne, storage: localStorage });
+    const textarea = shadow().querySelector('textarea') as HTMLTextAreaElement;
+    textarea.value = 'body { --route-rule: account; }';
+    (shadow().querySelector('[data-save]') as HTMLButtonElement).click();
+
+    expect(createStorageKey(accountOne)).toBe(createStorageKey(accountTwo));
+    expect(createStorageKey(accountOne)).not.toBe(createStorageKey(settings));
+    expect(localStorage.getItem(createStorageKey(accountTwo))).toBe(textarea.value);
+    expect(localStorage.getItem(createStorageKey(settings))).toBeNull();
+  });
 });
