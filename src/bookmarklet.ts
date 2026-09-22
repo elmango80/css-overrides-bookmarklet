@@ -7,16 +7,17 @@ const BLOCKED_STYLE_STATUS = 'No se pudieron aplicar las reglas CSS.';
 
 export interface BookmarkletRuntime {
   document: Document;
-  location: Pick<Location, 'origin' | 'pathname'>;
+  location: Pick<Location, 'host'>;
   storage: Storage;
 }
 
 const editorStyles = `
   :host { all: initial; }
-  .panel { position: fixed; z-index: 2147483647; top: 1rem; right: 1rem; width: min(28rem, calc(100vw - 2rem)); padding: 1rem; border: 1px solid #cbd5e1; border-radius: .5rem; background: #fff; color: #0f172a; box-shadow: 0 .5rem 2rem #0003; font: 14px/1.4 system-ui, sans-serif; }
-  textarea { box-sizing: border-box; display: block; width: 100%; min-height: 12rem; margin: .75rem 0; padding: .5rem; border: 1px solid #94a3b8; border-radius: .25rem; color: #0f172a; background: #fff; font: 13px/1.4 ui-monospace, monospace; resize: vertical; }
+  .panel { box-sizing: border-box; position: fixed; z-index: 2147483647; top: 0; right: 0; display: flex; flex-direction: column; width: min(28rem, 100vw); height: 100vh; height: 100dvh; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 0; background: #fff; color: #0f172a; box-shadow: 0 .5rem 2rem #0003; font: 14px/1.4 system-ui, sans-serif; }
+  h2 { margin: 0; padding-right: 2.5rem; }
+  textarea { box-sizing: border-box; display: block; flex: 1; width: 100%; min-height: 0; margin: .75rem 0; padding: .5rem; border: 1px solid #94a3b8; border-radius: .25rem; color: #0f172a; background: #fff; font: 13px/1.4 ui-monospace, monospace; resize: none; }
   button { padding: .45rem .7rem; border: 1px solid #64748b; border-radius: .25rem; background: #f8fafc; color: #0f172a; cursor: pointer; }
-  button + button { margin-left: .5rem; }
+  [data-close] { position: absolute; top: .75rem; right: .75rem; width: 2rem; height: 2rem; padding: 0; border: 0; background: transparent; font: 24px/1 system-ui, sans-serif; }
   [data-indicator] { position: fixed; z-index: 2147483647; right: 1rem; bottom: 1rem; padding: .5rem .75rem; border: 1px solid #64748b; border-radius: 999px; background: #fff; color: #0f172a; box-shadow: 0 .25rem 1rem #0003; font: 14px/1.2 system-ui, sans-serif; cursor: pointer; }
   [data-status] { min-height: 1.4em; color: #b91c1c; }
 `;
@@ -79,7 +80,8 @@ export function runBookmarklet(runtime?: Partial<BookmarkletRuntime>): void {
     const close = pageDocument.createElement('button');
     close.type = 'button';
     close.dataset.close = 'true';
-    close.textContent = 'Cerrar';
+    close.textContent = '×';
+    close.setAttribute('aria-label', 'Cerrar editor');
 
     save.addEventListener('click', () => {
       const css = textarea.value;

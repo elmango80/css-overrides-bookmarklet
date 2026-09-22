@@ -31,15 +31,21 @@ class MemoryStorage implements Storage {
 }
 
 describe('CSS override storage', () => {
-  it('uses only the origin and pathname', () => {
+  it('uses only the host', () => {
     expect(createStorageKey(new URL('https://example.com/account?tab=one#summary'))).toBe(
-      'css-overrides-bookmarklet:v1:https://example.com/account',
+      'css-overrides-bookmarklet:v1:example.com',
     );
   });
 
-  it('keeps separate paths isolated', () => {
-    expect(createStorageKey(new URL('https://example.com/account'))).not.toBe(
+  it('shares rules across paths on the same host', () => {
+    expect(createStorageKey(new URL('https://example.com/account'))).toBe(
       createStorageKey(new URL('https://example.com/settings')),
+    );
+  });
+
+  it('keeps separate hosts isolated', () => {
+    expect(createStorageKey(new URL('https://example.com/account'))).not.toBe(
+      createStorageKey(new URL('https://admin.example.com/account')),
     );
   });
 

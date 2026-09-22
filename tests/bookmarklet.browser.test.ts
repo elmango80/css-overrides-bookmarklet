@@ -169,19 +169,19 @@ describe('CSS overrides bookmarklet', () => {
     expect(getComputedStyle(secondDocument.querySelector('.target') as Element).getPropertyValue('--reload-rule').trim()).toBe('persisted');
   });
 
-  it('isolates stored rules by pathname while ignoring query and hash', () => {
-    const accountOne = { origin: 'https://example.test', pathname: '/account', search: '?tab=one', hash: '#summary' };
-    const accountTwo = { origin: 'https://example.test', pathname: '/account', search: '?tab=two', hash: '' };
-    const settings = { origin: 'https://example.test', pathname: '/settings', search: '', hash: '' };
+  it('shares stored rules across routes on the same host', () => {
+    const accountOne = new URL('https://example.test/account?tab=one#summary');
+    const accountTwo = new URL('https://example.test/account?tab=two');
+    const settings = new URL('https://example.test/settings');
 
     runBookmarklet({ document, location: accountOne, storage: localStorage });
     const textarea = shadow().querySelector('textarea') as HTMLTextAreaElement;
-    textarea.value = 'body { --route-rule: account; }';
+    textarea.value = 'body { --host-rule: shared; }';
     (shadow().querySelector('[data-save]') as HTMLButtonElement).click();
 
     expect(createStorageKey(accountOne)).toBe(createStorageKey(accountTwo));
-    expect(createStorageKey(accountOne)).not.toBe(createStorageKey(settings));
+    expect(createStorageKey(accountOne)).toBe(createStorageKey(settings));
     expect(localStorage.getItem(createStorageKey(accountTwo))).toBe(textarea.value);
-    expect(localStorage.getItem(createStorageKey(settings))).toBeNull();
+    expect(localStorage.getItem(createStorageKey(settings))).toBe(textarea.value);
   });
 });

@@ -10,8 +10,8 @@ export interface SaveCssResult {
   error?: string;
 }
 
-export function createStorageKey(location: Pick<Location, 'origin' | 'pathname'>): string {
-  return `${STORAGE_PREFIX}${location.origin}${location.pathname}`;
+export function createStorageKey(location: Pick<Location, 'host'>): string {
+  return `${STORAGE_PREFIX}${location.host}`;
 }
 
 export function loadCss(storage: Storage, key: string): LoadCssResult {
