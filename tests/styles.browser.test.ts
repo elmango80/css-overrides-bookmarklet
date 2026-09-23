@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { OVERRIDE_STYLE_ID, applyCss, verifyStyleApplication } from '../src/styles';
+import { OVERRIDE_STYLE_ID, applyCss, removeCss, verifyStyleApplication } from '../src/styles';
 
 afterEach(() => {
   document.getElementById(OVERRIDE_STYLE_ID)?.remove();
@@ -24,6 +24,15 @@ describe('CSS injection', () => {
 
     expect(document.querySelectorAll(`#${OVERRIDE_STYLE_ID}`)).toHaveLength(1);
     expect(document.getElementById(OVERRIDE_STYLE_ID)?.textContent).toBe('.target { color: blue; }');
+  });
+
+  it('removes injected CSS', () => {
+    applyCss(document, 'body { --removable-rule: active; }');
+
+    removeCss(document);
+
+    expect(document.getElementById(OVERRIDE_STYLE_ID)).toBeNull();
+    expect(getComputedStyle(document.body).getPropertyValue('--removable-rule')).toBe('');
   });
 
   it('verifies that an injected style affected the document', () => {

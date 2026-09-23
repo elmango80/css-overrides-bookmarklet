@@ -20,6 +20,10 @@ export function applyCss(document: Document, css: string): HTMLStyleElement {
   return style;
 }
 
+export function removeCss(document: Document): void {
+  document.getElementById(OVERRIDE_STYLE_ID)?.remove();
+}
+
 /**
  * Checks style application with a rule that is independent of user CSS.
  * This is deliberately best-effort: a missing browser API is not evidence of CSP blocking.

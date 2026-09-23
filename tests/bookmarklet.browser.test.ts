@@ -110,6 +110,48 @@ describe('CSS overrides bookmarklet', () => {
     expect(root.querySelector('[data-editor]')).not.toBeNull();
   });
 
+  it('disables applied rules immediately and saves without applying', () => {
+    const key = createStorageKey(window.location);
+    localStorage.setItem(key, 'body { --toggle-rule: active; }');
+    runBookmarklet();
+    (shadow().querySelector('[data-indicator]') as HTMLButtonElement).click();
+
+    const toggle = shadow().querySelector('[data-enabled-toggle]') as HTMLInputElement;
+    const save = shadow().querySelector('[data-save]') as HTMLButtonElement;
+    const textarea = shadow().querySelector('textarea') as HTMLTextAreaElement;
+    toggle.checked = false;
+    toggle.dispatchEvent(new Event('change'));
+
+    expect(document.getElementById(OVERRIDE_STYLE_ID)).toBeNull();
+    expect(getComputedStyle(document.body).getPropertyValue('--toggle-rule')).toBe('');
+    expect(save.textContent).toBe('Guardar');
+
+    textarea.value = 'body { --toggle-rule: updated; }';
+    save.click();
+
+    expect(localStorage.getItem(key)).toBe(textarea.value);
+    expect(document.getElementById(OVERRIDE_STYLE_ID)).toBeNull();
+    expect(shadow().querySelector('[data-indicator]')?.textContent).toBe('CSS inactivo');
+
+    (shadow().querySelector('[data-indicator]') as HTMLButtonElement).click();
+    expect((shadow().querySelector('[data-enabled-toggle]') as HTMLInputElement).checked).toBe(false);
+  });
+
+  it('reapplies saved rules immediately when re-enabled', () => {
+    localStorage.setItem(createStorageKey(window.location), 'body { --toggle-rule: active; }');
+    runBookmarklet();
+    (shadow().querySelector('[data-indicator]') as HTMLButtonElement).click();
+
+    const toggle = shadow().querySelector('[data-enabled-toggle]') as HTMLInputElement;
+    toggle.checked = false;
+    toggle.dispatchEvent(new Event('change'));
+    toggle.checked = true;
+    toggle.dispatchEvent(new Event('change'));
+
+    expect(getComputedStyle(document.body).getPropertyValue('--toggle-rule').trim()).toBe('active');
+    expect((shadow().querySelector('[data-save]') as HTMLButtonElement).textContent).toBe('Guardar y aplicar');
+  });
+
   it('closes only the editor and keeps applied CSS active', () => {
     localStorage.setItem(createStorageKey(window.location), 'body { --close-rule: active; }');
     runBookmarklet();
