@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/images/readme-banner.svg" alt="CSS Overrides Bookmarklet: editor para aplicar reglas CSS personalizadas" width="1200" />
+
 # CSS Overrides Bookmarklet
 
 Un bookmarklet autocontenido para guardar, aplicar y desactivar reglas CSS personalizadas en cualquier sitio web.
